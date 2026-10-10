@@ -1,0 +1,30 @@
+import { Router } from 'express';
+import multer from 'multer';
+import { rateLimit } from 'express-rate-limit';
+import * as authController from '../controllers/auth.js';
+import * as users from '../controllers/users.js';
+import * as catalog from '../controllers/catalog.js';
+import { auth } from '../services/session.js';
+import { authLimit } from '../middleware/http.js';
+import * as bookings from '../controllers/bookings.js';
+import { simulationEnabled } from '../services/bookings.js';
+export const router = Router();
+const a = Router(); a.use(authLimit);
+// Per-email cooldown is persisted in challenges; this limiter also bounds password/OTP abuse by IP.
+const otpLimit = rateLimit({ windowMs: 5 * 60000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, handler: (_r, s) => s.status(429).json({ code: 'RATE_LIMITED', message: 'Too many requests' }) });
+a.post('/register/start', otpLimit, authController.registerStart); a.post('/register/verify', otpLimit, authController.registerVerify);
+a.post('/otp/resend', otpLimit, authController.resend); a.post('/login', authController.login); a.post('/refresh', authController.refreshSession); a.post('/logout', auth, authController.logout);
+a.post('/password/forgot', otpLimit, authController.forgot); a.post('/password/verify', otpLimit, authController.verifyReset); a.post('/password/reset', authController.resetPassword); a.post('/password/change', auth, authController.changePassword);
+router.use('/auth', a);
+router.get('/categories', catalog.getCategories); router.get('/tours', catalog.list); router.get('/tours/:id', catalog.detail);
+router.get('/tours/:id/related', catalog.related); router.get('/tours/:id/departures', bookings.departures); router.get('/tours/:id/reviews', catalog.reviews);
+router.get('/tours/:id/review-eligibility', auth, catalog.eligibility); router.post('/tours/:id/reviews', auth, catalog.postReview);
+router.get('/users/me', auth, users.me); router.patch('/users/me', auth, users.patchMe);
+router.post('/users/me/avatar', auth, multer({ storage: multer.memoryStorage(), limits: { fileSize: 3 * 1024 * 1024, files: 1, fields: 0 } }).single('avatar'), users.avatar);
+router.get('/users/me/favorites', auth, users.favorites); router.put('/users/me/favorites/:tourId', auth, users.putFavorite); router.delete('/users/me/favorites/:tourId', auth, users.deleteFavorite);
+
+router.post('/bookings/quote', auth, bookings.quote); router.post('/bookings', auth, bookings.create);
+router.get('/users/me/bookings', auth, bookings.list); router.get('/bookings/:id', auth, bookings.detail);
+router.post('/bookings/:id/cancel', auth, bookings.cancel); router.get('/bookings/:id/ticket', auth, bookings.ticket);
+if (simulationEnabled()) router.post('/bookings/:id/payment-simulation', auth, bookings.payment);
+router.get('/users/me/notifications', auth, bookings.notifications); router.patch('/users/me/notifications/:id/read', auth, bookings.read); router.post('/users/me/notifications/read-all', auth, bookings.readAll);

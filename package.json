@@ -1,0 +1,35 @@
+{
+  "name": "traver-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node scripts/check.js",
+    "seed": "node scripts/seed.js",
+    "seed:eligible": "node scripts/eligible.js",
+    "smoke": "node scripts/smoke.js",
+    "manage": "node scripts/manage.js",
+    "smoke:booking": "node scripts/booking-smoke.js",
+    "seed:departures": "node scripts/seed-departures.js",
+    "mail:check": "node scripts/check-mail.js",
+    "test:mail": "node --test scripts/mail.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.24.0",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "4.1.12",
+    "express-rate-limit": "8.1.0",
+    "helmet": "8.1.0",
+    "nodemailer": "7.0.10",
+    "multer": "^2.0.2",
+    "sharp": "^0.34.3",
+    "dotenv": "^17.2.0"
+  }
+}
