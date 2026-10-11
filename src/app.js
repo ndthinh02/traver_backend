@@ -6,6 +6,8 @@ import { router } from './routes/index.js';
 import { errors, ok } from './middleware/http.js';
 import { uploadDir } from './controllers/users.js';
 export const app = express();
+// Render forwards requests through its reverse proxy; trust the nearest hop only.
+if (process.env.RENDER === 'true') app.set('trust proxy', 1);
 app.disable('x-powered-by'); app.use(helmet());
 app.use(rateLimit({ windowMs: 60000, limit: 240, standardHeaders: 'draft-8', legacyHeaders: false, handler: (_r, s) => s.status(429).json({ code: 'RATE_LIMITED', message: 'Too many requests' }) }));
 app.use(express.json({ limit: '32kb' }));
